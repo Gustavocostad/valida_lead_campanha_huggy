@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  api-convenio:
+    image: valida_lead_campanha_huggy-api-convenio:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+      labels:
+        # Habilita o serviço no traefik
+        - traefik.enable=true
+        # Configura o endereço da API no traefik
+        - traefik.http.routers.api-convenio.rule=Host(`apiconvenio.devmeuconsig.com`)
+        # Define o redirecionamento para SSL
+        - traefik.http.routers.api-convenio.entrypoints=websecure
+        # Define o certificado SSL
+        - traefik.http.routers.api-convenio.tls.certresolver=letsencryptresolver
+        # Define o serviço da API no traefik
+        - traefik.http.routers.api-convenio.service=api-convenio
+        # Define a porta do serviço no traefik
+        - traefik.http.services.api-convenio.loadbalancer.server.port=3000
+        # Define o passHostHeader para o serviço no traefik
+        - traefik.http.services.api-convenio.loadbalancer.passHostHeader=true
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DB_HOST=45.4.183.128
+      - DB_NAME=disparador_gupshup
+      - DB_USER=postgres
+      - DB_PASSWORD=mudar123
+      - DB_PORT=55432
+      - LOG_LEVEL=info
+      - API_KEY=${API_KEY}
+    networks:
+      - network_public
+
+networks:
+  network_public:
+    external: true
+
