@@ -9,9 +9,10 @@ RUN npm install --production
 # Copia o código da aplicação
 COPY server.js ./
 
-# Cria usuário não-root para segurança
+# Cria usuário não-root e transfere dono dos arquivos para ele
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
 
 USER nodejs
 

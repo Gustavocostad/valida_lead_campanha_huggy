@@ -17,18 +17,29 @@ const fastify = require('fastify')({
 
 const { Pool } = require('pg');
 
-// Configuração do pool de conexões PostgreSQL otimizado para alta performance
-const pool = new Pool({
-  host: process.env.DB_HOST || '45.4.183.128',
-  database: process.env.DB_NAME || 'disparador_gupshup',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'mudar123',
-  port: process.env.DB_PORT || 55432,
-  max: 20, // Máximo de clientes no pool
-  idleTimeoutMillis: 30000, // Fecha clientes inativos após 30s
-  connectionTimeoutMillis: 5000, // Timeout de conexão de 5s
-  allowExitOnIdle: true
-});
+// Configuração do pool de conexões PostgreSQL
+// Preferir DB_URL com host interno (rede privada); evite IP público em produção.
+const poolConfig = process.env.DB_URL
+  ? {
+      connectionString: process.env.DB_URL,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+      allowExitOnIdle: true
+    }
+  : {
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+      allowExitOnIdle: true
+    };
+
+const pool = new Pool(poolConfig);
 
 // Testa a conexão ao iniciar
 pool.on('connect', () => {
