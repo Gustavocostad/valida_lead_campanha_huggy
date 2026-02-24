@@ -58,10 +58,19 @@ if (!API_KEY) {
   fastify.log.warn('⚠️  API_KEY não configurada! A API estará vulnerável.');
 }
 
+// Handler de erro global: evita que erros não tratados fechem a conexão (502 no Traefik)
+fastify.setErrorHandler((err, request, reply) => {
+  fastify.log.error({ err, url: request.url }, 'Erro não tratado');
+  reply.code(500).send({
+    error: 'Erro interno do servidor',
+    convenio: null
+  });
+});
+
 // Hook de autenticação via API Key
 fastify.addHook('onRequest', async (request, reply) => {
-  // Permite acesso ao health check e rota raiz sem autenticação
-  if (request.url === '/health' || request.url === '/') {
+  const path = (request.url || request.routerPath || '').split('?')[0];
+  if (path === '/health' || path === '/' || path.startsWith('/health/')) {
     return;
   }
 
@@ -76,7 +85,7 @@ fastify.addHook('onRequest', async (request, reply) => {
   if (!apiKey || apiKey !== API_KEY) {
     fastify.log.warn({
       ip: request.ip,
-      url: request.url,
+      url: path,
       userAgent: request.headers['user-agent']
     }, 'Tentativa de acesso não autorizada');
 
