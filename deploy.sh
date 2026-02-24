@@ -16,7 +16,7 @@ if [ -z "$API_KEY" ]; then
 fi
 
 echo "🔨 Construindo a imagem Docker..."
-docker build -t valida_lead_campanha_huggy-api-convenio:latest .
+docker build -t valida_lead_campanha_huggy-api-convenio:1.0.0 -t valida_lead_campanha_huggy-api-convenio:latest .
 
 if [ $? -ne 0 ]; then
     echo "❌ Erro ao construir a imagem"

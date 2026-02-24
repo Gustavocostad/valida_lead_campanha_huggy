@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   api-convenio:
-    image: valida_lead_campanha_huggy-api-convenio:latest
+    image: valida_lead_campanha_huggy-api-convenio:1.0.0
     deploy:
       replicas: 1
       placement:
@@ -37,7 +37,9 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOST=0.0.0.0
-      - DB_URL=postgres://postgres:uxgp7md2UdQPhgk@pgbouncer_pgbouncer_session:5432/disparador_gupshup?sslmode=disable
+      # Host = <STACK_NAME>_pgbouncer_transaction (use transaction para API; porta 5432 é a interna na rede overlay)
+      # Confirme o nome do stack do PgBouncer: se for "pgbouncer" → pgbouncer_pgbouncer_transaction
+      - DB_URL=postgres://postgres:uxgp7md2UdQPhgk@pgbouncer_pgbouncer_transaction:5432/disparador_gupshup?sslmode=disable
       - LOG_LEVEL=info
       - API_KEY=c4b4a58d3c7c0a814r7f4b3f0b8e2a0e7f2d6a1c9c0a7b2e5d8f3a6c1b9e4f7a
     networks:

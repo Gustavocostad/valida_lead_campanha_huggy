@@ -19,12 +19,13 @@ const { Pool } = require('pg');
 
 // Configuração do pool de conexões PostgreSQL
 // Preferir DB_URL com host interno (rede privada); evite IP público em produção.
+const CONNECTION_TIMEOUT_MS = parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || '15000', 10);
 const poolConfig = process.env.DB_URL
   ? {
       connectionString: process.env.DB_URL,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: CONNECTION_TIMEOUT_MS,
       allowExitOnIdle: true
     }
   : {
@@ -35,7 +36,7 @@ const poolConfig = process.env.DB_URL
       port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: CONNECTION_TIMEOUT_MS,
       allowExitOnIdle: true
     };
 
@@ -172,8 +173,18 @@ fastify.get('/convenio/:phone', async (request, reply) => {
       responseTime: `${responseTime}ms`
     }, 'Erro na consulta');
 
+    // Timeout ou falha de conexão com o banco → 503 (cliente pode tentar de novo)
+    const isConnectionError = /timeout|ECONNREFUSED|ECONNRESET|connection terminated/i.test(error.message || '');
+    if (isConnectionError) {
+      reply.code(503);
+      return {
+        error: 'Serviço temporariamente indisponível',
+        convenio: null
+      };
+    }
+
     reply.code(500);
-    return { 
+    return {
       error: 'Erro interno do servidor',
       convenio: null
     };
